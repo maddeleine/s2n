@@ -70,7 +70,8 @@ int s2n_extensions_server_key_share_select(struct s2n_connection *conn)
     }
     /* Client sent no keyshares, need to send Hello Retry Request with first negotiated curve */
     if (conn->secure.server_ecc_evp_params.negotiated_curve) {
-        GUARD(s2n_server_should_retry(conn));
+        /* Will stay commented out until Hello Retry Request is merged into master
+        GUARD(s2n_server_should_retry(conn));*/
         return 0;
     }   
     S2N_ERROR(S2N_ERR_ECDHE_UNSUPPORTED_CURVE);
