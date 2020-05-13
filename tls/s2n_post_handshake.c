@@ -38,6 +38,9 @@ int s2n_post_handshake_recv(struct s2n_connection *conn)
         case TLS_KEY_UPDATE:
         GUARD(s2n_key_update_recv(conn));
         break;
+        default:
+        /* Ignore all other messages */
+        break;
     }
     GUARD(s2n_stuffer_wipe(&conn->handshake.io));
     return 0;

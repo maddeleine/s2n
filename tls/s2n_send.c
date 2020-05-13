@@ -167,9 +167,17 @@ ssize_t s2n_sendv_with_offset(struct s2n_connection *conn, const struct iovec *b
                 cbcHackUsed = 1;
             }
         }
-
-        /* Write and encrypt the record */
+        
         GUARD(s2n_stuffer_rewrite(&conn->out));
+        if ((conn->secure.cipher_suite == &s2n_tls13_aes_128_gcm_sha256) |
+                (conn->secure.cipher_suite == &s2n_tls13_aes_256_gcm_sha384)) {
+            GUARD(s2n_check_key_limits(conn, to_write));
+            if (conn->key_update_pending) {
+                GUARD(s2n_key_update_send(conn));
+                GUARD(s2n_flush(conn, blocked));
+            }
+        }
+        /* Write and encrypt the record */
         GUARD(s2n_record_writev(conn, TLS_APPLICATION_DATA, bufs, count, 
             conn->current_user_data_consumed + offs, to_write));
         conn->current_user_data_consumed += to_write;

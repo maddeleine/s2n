@@ -71,7 +71,6 @@ def key_update_recv(server, client):
             break    
     return result
 
-    
 def main():
     parser = argparse.ArgumentParser(description='Runs TLS1.3 minimal handshake integration tests against Openssl')
     parser.add_argument('host', help='The host to connect to')
