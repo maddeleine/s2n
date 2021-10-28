@@ -500,7 +500,7 @@ int main(int argc, char **argv)
 
         size_t tls12_session_ticket_len = s2n_connection_get_session_length(client_conn);
         uint8_t tls12_session_ticket[S2N_TLS12_SESSION_SIZE] = { 0 };
-        EXPECT_SUCCESS(s2n_connection_get_session(conn, tls12_session_ticket, tls12_session_ticket_len));
+        EXPECT_SUCCESS(s2n_connection_get_session(client_conn, tls12_session_ticket, tls12_session_ticket_len));
 
         /* Wipe connections and set up new handshake */
         EXPECT_SUCCESS(s2n_connection_wipe(server_conn));
