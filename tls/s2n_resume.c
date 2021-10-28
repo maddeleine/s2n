@@ -341,6 +341,7 @@ static S2N_RESULT s2n_deserialize_resumption_state(struct s2n_connection *conn, 
     } else {
         RESULT_BAIL(S2N_ERR_INVALID_SERIALIZED_SESSION_STATE);
     }
+    conn->set_session = true;
     return S2N_RESULT_OK;
 }
 
