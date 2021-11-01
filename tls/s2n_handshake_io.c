@@ -809,7 +809,7 @@ int s2n_conn_set_handshake_type(struct s2n_connection *conn)
     }
 
     s2n_extension_type_id ems_ext_id = 0;
-    RESULT_GUARD_POSIX(s2n_extension_supported_iana_value_to_id(TLS_EXTENSION_EMS, &ems_ext_id));
+    POSIX_GUARD(s2n_extension_supported_iana_value_to_id(TLS_EXTENSION_EMS, &ems_ext_id));
     bool ems_extension_recv = S2N_CBIT_TEST(conn->extension_requests_received, ems_ext_id);
 
     if (conn->config->use_tickets) {
@@ -825,7 +825,7 @@ int s2n_conn_set_handshake_type(struct s2n_connection *conn)
              *# MUST abort the abbreviated handshake.
              **/
             if (conn->ems_negotiated) {
-                RESULT_ENSURE(ems_extension_recv, S2N_ERR_MISSING_EXTENSION);
+                POSIX_ENSURE(ems_extension_recv, S2N_ERR_MISSING_EXTENSION);
             }
 
             if (s2n_config_is_encrypt_decrypt_key_available(conn->config) == 1) {
@@ -856,7 +856,7 @@ int s2n_conn_set_handshake_type(struct s2n_connection *conn)
          *# MUST abort the abbreviated handshake.
          **/
         if (conn->ems_negotiated) {
-            RESULT_ENSURE(ems_extension_recv, S2N_ERR_MISSING_EXTENSION);
+            POSIX_ENSURE(ems_extension_recv, S2N_ERR_MISSING_EXTENSION);
         }
     }
 
@@ -871,8 +871,10 @@ skip_cache_lookup:
     /* If we get this far, it's a full handshake */
     POSIX_GUARD_RESULT(s2n_handshake_type_set_flag(conn, FULL_HANDSHAKE));
 
-    /* Ignore the EMS state from the ticket since we're falling back to a full handshake here */
-    conn->ems_negotiated = ems_extension_recv;
+    /* Server should ignore the EMS state from the ticket since we're falling back to a full handshake here */
+    if(conn->mode == S2N_SERVER) {
+        conn->ems_negotiated = ems_extension_recv;
+    }
 
     bool is_ephemeral = false;
     POSIX_GUARD_RESULT(s2n_kex_is_ephemeral(conn->secure.cipher_suite->key_exchange_alg, &is_ephemeral));
