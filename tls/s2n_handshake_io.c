@@ -785,24 +785,6 @@ static S2N_RESULT s2n_conn_set_tls13_handshake_type(struct s2n_connection *conn)
     return S2N_RESULT_OK;
 }
 
-static S2N_RESULT s2n_validate_ems_status(struct s2n_connection *conn)
-{
-    RESULT_ENSURE_REF(conn);
-
-    if (conn->ems_negotiated) {
-        s2n_extension_type_id ems_ext_id = 0;
-        RESULT_GUARD_POSIX(s2n_extension_supported_iana_value_to_id(TLS_EXTENSION_EMS, &ems_ext_id));
-        /**
-         *= https://tools.ietf.org/rfc/rfc7627#section-5.3
-         *# If the original session used the "extended_master_secret"
-         *# extension but the new ClientHello does not contain it, the server
-         *# MUST abort the abbreviated handshake.
-         **/
-        RESULT_ENSURE(S2N_CBIT_TEST(conn->extension_requests_received, ems_ext_id), S2N_ERR_MISSING_EXTENSION);
-    }
-    return S2N_RESULT_OK;
-}
-
 int s2n_conn_set_handshake_type(struct s2n_connection *conn)
 {
     if (IS_TLS13_HANDSHAKE(conn)) {

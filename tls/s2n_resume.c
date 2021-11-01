@@ -240,6 +240,35 @@ static S2N_RESULT s2n_validate_ticket_age(uint64_t current_time, uint64_t ticket
     return S2N_RESULT_OK;
 }
 
+S2N_RESULT s2n_validate_ems_status(struct s2n_connection *conn)
+{
+    RESULT_ENSURE_REF(conn);
+
+    s2n_extension_type_id ems_ext_id = 0;
+    RESULT_GUARD_POSIX(s2n_extension_supported_iana_value_to_id(TLS_EXTENSION_EMS, &ems_ext_id));
+    bool ems_extension_recv = S2N_CBIT_TEST(conn->extension_requests_received, ems_ext_id);
+
+    /**
+     *= https://tools.ietf.org/rfc/rfc7627#section-5.3
+     *# If the original session did not use the "extended_master_secret"
+     *# extension but the new ClientHello contains the extension, then the
+     *# server MUST NOT perform the abbreviated handshake.  Instead, it
+     *# SHOULD continue with a full handshake (as described in
+     *# Section 5.2) to negotiate a new session.
+     *#
+     *# If the original session used the "extended_master_secret"
+     *# extension but the new ClientHello does not contain it, the server
+     *# MUST abort the abbreviated handshake.
+     **/
+    if (conn->ems_negotiated) {
+        RESULT_ENSURE(ems_extension_recv, S2N_ERR_MISSING_EXTENSION);
+    } else {
+        /* Since we're falling back to a full handshake here, we ignore the EMS state from the ticket */
+        conn->ems_negotiated = ems_extension_recv;
+    }
+    return S2N_RESULT_OK;
+}
+
 static S2N_RESULT s2n_tls13_deserialize_session_state(struct s2n_connection *conn, struct s2n_blob *psk_identity, struct s2n_stuffer *from)
 {
     RESULT_ENSURE_REF(conn);
