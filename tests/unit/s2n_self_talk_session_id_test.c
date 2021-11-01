@@ -465,6 +465,7 @@ int main(int argc, char **argv)
 
     /* Session caching with a server that does not support EMS */
     {
+        initialize_cache();
         struct s2n_connection *client_conn = s2n_connection_new(S2N_CLIENT);
         EXPECT_NOT_NULL(client_conn);
         s2n_config_disable_x509_verification(config);
@@ -536,6 +537,7 @@ int main(int argc, char **argv)
      *# MUST abort the abbreviated handshake.
      **/
     {
+        initialize_cache();
         struct s2n_connection *client_conn = s2n_connection_new(S2N_CLIENT);
         EXPECT_NOT_NULL(client_conn);
         s2n_config_disable_x509_verification(config);
@@ -589,6 +591,7 @@ int main(int argc, char **argv)
      *# Section 5.2) to negotiate a new session.
      **/
     {
+        initialize_cache();
         struct s2n_connection *client_conn = s2n_connection_new(S2N_CLIENT);
         EXPECT_NOT_NULL(client_conn);
         s2n_config_disable_x509_verification(config);
