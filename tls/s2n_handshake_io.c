@@ -40,7 +40,6 @@
 #include "utils/s2n_socket.h"
 #include "utils/s2n_random.h"
 #include "utils/s2n_str.h"
-#include "utils/s2n_bitmap.h"
 
 /* clang-format off */
 struct s2n_handshake_action {

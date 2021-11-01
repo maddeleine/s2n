@@ -23,6 +23,7 @@
 #include "utils/s2n_blob.h"
 #include "utils/s2n_random.h"
 #include "utils/s2n_set.h"
+#include "utils/s2n_bitmap.h"
 
 #include "tls/s2n_cipher_suites.h"
 #include "tls/s2n_connection.h"
