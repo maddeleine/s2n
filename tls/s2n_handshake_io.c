@@ -40,6 +40,7 @@
 #include "utils/s2n_socket.h"
 #include "utils/s2n_random.h"
 #include "utils/s2n_str.h"
+#include "utils/s2n_bitmap.h"
 
 /* clang-format off */
 struct s2n_handshake_action {
@@ -807,13 +808,25 @@ int s2n_conn_set_handshake_type(struct s2n_connection *conn)
         POSIX_GUARD_RESULT(s2n_handshake_type_set_flag(conn, CLIENT_AUTH));
     }
 
+    s2n_extension_type_id ems_ext_id = 0;
+    RESULT_GUARD_POSIX(s2n_extension_supported_iana_value_to_id(TLS_EXTENSION_EMS, &ems_ext_id));
+    bool ems_extension_recv = S2N_CBIT_TEST(conn->extension_requests_received, ems_ext_id);
+
     if (conn->config->use_tickets) {
         if (conn->session_ticket_status == S2N_DECRYPT_TICKET) {
             if (s2n_decrypt_session_ticket(conn, &conn->client_ticket_to_decrypt) == S2N_SUCCESS) {
                 return S2N_SUCCESS;
             }
 
-            POSIX_GUARD_RESULT(s2n_validate_ems_status(conn));
+            /**
+             *= https://tools.ietf.org/rfc/rfc7627#section-5.3
+             *# If the original session used the "extended_master_secret"
+             *# extension but the new ClientHello does not contain it, the server
+             *# MUST abort the abbreviated handshake.
+             **/
+            if (conn->ems_negotiated) {
+                RESULT_ENSURE(ems_extension_recv, S2N_ERR_MISSING_EXTENSION);
+            }
 
             if (s2n_config_is_encrypt_decrypt_key_available(conn->config) == 1) {
                 conn->session_ticket_status = S2N_NEW_TICKET;
@@ -836,7 +849,15 @@ int s2n_conn_set_handshake_type(struct s2n_connection *conn)
         if (r == S2N_SUCCESS || (r < S2N_SUCCESS && S2N_ERROR_IS_BLOCKING(s2n_errno))) {
             return r;
         }
-        POSIX_GUARD_RESULT(s2n_validate_ems_status(conn));
+        /**
+         *= https://tools.ietf.org/rfc/rfc7627#section-5.3
+         *# If the original session used the "extended_master_secret"
+         *# extension but the new ClientHello does not contain it, the server
+         *# MUST abort the abbreviated handshake.
+         **/
+        if (conn->ems_negotiated) {
+            RESULT_ENSURE(ems_extension_recv, S2N_ERR_MISSING_EXTENSION);
+        }
     }
 
 skip_cache_lookup:
@@ -849,6 +870,9 @@ skip_cache_lookup:
 
     /* If we get this far, it's a full handshake */
     POSIX_GUARD_RESULT(s2n_handshake_type_set_flag(conn, FULL_HANDSHAKE));
+
+    /* Ignore the EMS state from the ticket since we're falling back to a full handshake here */
+    conn->ems_negotiated = ems_extension_recv;
 
     bool is_ephemeral = false;
     POSIX_GUARD_RESULT(s2n_kex_is_ephemeral(conn->secure.cipher_suite->key_exchange_alg, &is_ephemeral));

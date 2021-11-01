@@ -23,7 +23,6 @@
 #include "utils/s2n_blob.h"
 #include "utils/s2n_random.h"
 #include "utils/s2n_set.h"
-#include "utils/s2n_bitmap.h"
 
 #include "tls/s2n_cipher_suites.h"
 #include "tls/s2n_connection.h"
@@ -238,35 +237,6 @@ static S2N_RESULT s2n_validate_ticket_age(uint64_t current_time, uint64_t ticket
     uint64_t ticket_age_in_nanos = current_time - ticket_issue_time;
     uint64_t ticket_age_in_sec = ticket_age_in_nanos / ONE_SEC_IN_NANOS;
     RESULT_ENSURE(ticket_age_in_sec <= ONE_WEEK_IN_SEC, S2N_ERR_INVALID_SESSION_TICKET);
-    return S2N_RESULT_OK;
-}
-
-S2N_RESULT s2n_validate_ems_status(struct s2n_connection *conn)
-{
-    RESULT_ENSURE_REF(conn);
-
-    s2n_extension_type_id ems_ext_id = 0;
-    RESULT_GUARD_POSIX(s2n_extension_supported_iana_value_to_id(TLS_EXTENSION_EMS, &ems_ext_id));
-    bool ems_extension_recv = S2N_CBIT_TEST(conn->extension_requests_received, ems_ext_id);
-
-    /**
-     *= https://tools.ietf.org/rfc/rfc7627#section-5.3
-     *# If the original session did not use the "extended_master_secret"
-     *# extension but the new ClientHello contains the extension, then the
-     *# server MUST NOT perform the abbreviated handshake.  Instead, it
-     *# SHOULD continue with a full handshake (as described in
-     *# Section 5.2) to negotiate a new session.
-     *#
-     *# If the original session used the "extended_master_secret"
-     *# extension but the new ClientHello does not contain it, the server
-     *# MUST abort the abbreviated handshake.
-     **/
-    if (conn->ems_negotiated) {
-        RESULT_ENSURE(ems_extension_recv, S2N_ERR_MISSING_EXTENSION);
-    } else {
-        /* Since we're falling back to a full handshake here, we ignore the EMS state from the ticket */
-        conn->ems_negotiated = ems_extension_recv;
-    }
     return S2N_RESULT_OK;
 }
 

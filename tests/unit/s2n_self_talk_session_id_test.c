@@ -575,7 +575,8 @@ int main(int argc, char **argv)
         /* Server did not receive the EMS extension from client */
         EXPECT_FAILURE_WITH_ERRNO(s2n_negotiate_test_server_and_client(server_conn, client_conn), S2N_ERR_MISSING_EXTENSION);
 
-        EXPECT_SUCCESS(s2n_connection_free(conn));
+        EXPECT_SUCCESS(s2n_connection_free(client_conn));
+        EXPECT_SUCCESS(s2n_connection_free(server_conn));
     }
 
     /**
