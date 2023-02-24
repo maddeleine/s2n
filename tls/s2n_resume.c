@@ -849,10 +849,9 @@ int s2n_decrypt_session_ticket(struct s2n_connection *conn, struct s2n_stuffer *
     uint64_t now;
     POSIX_GUARD_RESULT(s2n_config_wall_clock(conn->config, &now));
 
-    /* If the key is in decrypt-only state, then a new key is assigned
-     * for the ticket.
-     */
-    if (now >= key->intro_timestamp + conn->config->encrypt_decrypt_key_lifetime_in_nanos) {
+    /* In TLS12, a new ticket is sent if the ticket key has passed into its decrypt-only mode. */
+    if (now >= key->intro_timestamp + conn->config->encrypt_decrypt_key_lifetime_in_nanos
+            && conn->actual_protocol_version < S2N_TLS13) {
         /* Check if a key in encrypt-decrypt state is available */
         if (s2n_config_is_encrypt_decrypt_key_available(conn->config) == 1) {
             conn->session_ticket_status = S2N_NEW_TICKET;

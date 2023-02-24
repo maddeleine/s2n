@@ -1335,6 +1335,47 @@ int main(int argc, char **argv)
         EXPECT_SUCCESS(s2n_config_free(config));
     }
 
+    /* TLS1.3 session can be resumed even if encryption key has entered decrypt-only state */
+    {
+        DEFER_CLEANUP(struct s2n_config *config = s2n_config_new(), s2n_config_ptr_free);
+        EXPECT_NOT_NULL(config);
+        EXPECT_SUCCESS(s2n_config_add_cert_chain_and_key_to_store(config, chain_and_key));
+        EXPECT_SUCCESS(s2n_config_set_unsafe_for_testing(config));
+        EXPECT_SUCCESS(s2n_config_set_session_tickets_onoff(config, 1));
+        EXPECT_SUCCESS(s2n_config_add_ticket_crypto_key(config, ticket_key_name1, s2n_array_len(ticket_key_name1),
+                ticket_key1, s2n_array_len(ticket_key1), 0));
+
+        EXPECT_NOT_NULL(client_conn = s2n_connection_new(S2N_CLIENT));
+        EXPECT_SUCCESS(s2n_connection_set_config(client_conn, config));
+        EXPECT_SUCCESS(s2n_connection_set_cipher_preferences(client_conn, "default_tls13"));
+        EXPECT_SUCCESS(s2n_connection_set_session(client_conn, tls13_serialized_session_state.blob.data,
+                s2n_stuffer_data_available(&tls13_serialized_session_state)));
+
+        EXPECT_NOT_NULL(server_conn = s2n_connection_new(S2N_SERVER));
+        EXPECT_SUCCESS(s2n_connection_set_config(server_conn, config));
+        EXPECT_SUCCESS(s2n_connection_set_cipher_preferences(server_conn, "default_tls13"));
+
+        /* Add a mock delay such that the key used to encrypt the ticket moves to decrypt-only state */
+        uint64_t mock_delay = config->encrypt_decrypt_key_lifetime_in_nanos;
+        EXPECT_SUCCESS(s2n_config_set_wall_clock(config, mock_nanoseconds_since_epoch, &mock_delay));
+
+        /* Add a second key */
+        EXPECT_SUCCESS(s2n_config_add_ticket_crypto_key(config, ticket_key_name2, s2n_array_len(ticket_key_name2),
+                ticket_key2, s2n_array_len(ticket_key2), 0));
+
+        EXPECT_SUCCESS(s2n_connection_set_config(server_conn, config));
+
+        EXPECT_SUCCESS(s2n_connections_set_io_pair(client_conn, server_conn, &io_pair));
+        EXPECT_SUCCESS(s2n_negotiate_test_server_and_client(server_conn, client_conn));
+
+        /* Verify that a successful resumption handshake occurred */
+        EXPECT_TRUE(IS_RESUMPTION_HANDSHAKE(server_conn));
+        EXPECT_TRUE(IS_RESUMPTION_HANDSHAKE(client_conn));
+
+        EXPECT_SUCCESS(s2n_connection_free(server_conn));
+        EXPECT_SUCCESS(s2n_connection_free(client_conn));
+    }
+
     EXPECT_SUCCESS(s2n_io_pair_close(&io_pair));
     EXPECT_SUCCESS(s2n_cert_chain_and_key_free(chain_and_key));
     EXPECT_SUCCESS(s2n_cert_chain_and_key_free(ecdsa_chain_and_key));
