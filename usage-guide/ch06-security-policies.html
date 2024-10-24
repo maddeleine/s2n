@@ -88,7 +88,7 @@
 
         <nav id="sidebar" class="sidebar" aria-label="Table of contents">
             <div class="sidebar-scrollbox">
-                <ol class="chapter"><li class="chapter-item expanded affix "><a href="ch00-introduction.html">Introduction</a></li><li class="chapter-item expanded "><a href="ch01-api.html"><strong aria-hidden="true">1.</strong> s2n-tls API</a></li><li class="chapter-item expanded "><a href="ch02-initialization.html"><strong aria-hidden="true">2.</strong> Initialization and Teardown</a></li><li class="chapter-item expanded "><a href="ch03-error-handling.html"><strong aria-hidden="true">3.</strong> Error Handling</a></li><li class="chapter-item expanded "><a href="ch04-connection.html"><strong aria-hidden="true">4.</strong> TLS Connections</a></li><li class="chapter-item expanded "><a href="ch05-config.html"><strong aria-hidden="true">5.</strong> Configuring the Connection</a></li><li class="chapter-item expanded "><a href="ch06-security-policies.html" class="active"><strong aria-hidden="true">6.</strong> Security Policies</a></li><li class="chapter-item expanded "><a href="ch07-io.html"><strong aria-hidden="true">7.</strong> IO</a></li><li class="chapter-item expanded "><a href="ch08-record-sizes.html"><strong aria-hidden="true">8.</strong> TLS Record Sizes</a></li><li class="chapter-item expanded "><a href="ch09-certificates.html"><strong aria-hidden="true">9.</strong> Certificates and Authentication</a></li><li class="chapter-item expanded "><a href="ch10-client-hello.html"><strong aria-hidden="true">10.</strong> Examining the Client Hello</a></li><li class="chapter-item expanded "><a href="ch11-resumption.html"><strong aria-hidden="true">11.</strong> Session Resumption</a></li><li class="chapter-item expanded "><a href="ch12-private-key-ops.html"><strong aria-hidden="true">12.</strong> Offloading Private Key Operations</a></li><li class="chapter-item expanded "><a href="ch13-preshared-keys.html"><strong aria-hidden="true">13.</strong> Pre-shared Keys</a></li><li class="chapter-item expanded "><a href="ch14-early-data.html"><strong aria-hidden="true">14.</strong> Early Data</a></li></ol>
+                <ol class="chapter"><li class="chapter-item expanded affix "><a href="ch00-introduction.html">Introduction</a></li><li class="chapter-item expanded "><a href="ch01-api.html"><strong aria-hidden="true">1.</strong> s2n-tls API</a></li><li class="chapter-item expanded "><a href="ch02-initialization.html"><strong aria-hidden="true">2.</strong> Initialization and Teardown</a></li><li class="chapter-item expanded "><a href="ch03-error-handling.html"><strong aria-hidden="true">3.</strong> Error Handling</a></li><li class="chapter-item expanded "><a href="ch04-connection.html"><strong aria-hidden="true">4.</strong> TLS Connections</a></li><li class="chapter-item expanded "><a href="ch05-config.html"><strong aria-hidden="true">5.</strong> Configuring the Connection</a></li><li class="chapter-item expanded "><a href="ch06-security-policies.html" class="active"><strong aria-hidden="true">6.</strong> Security Policies</a></li><li class="chapter-item expanded "><a href="ch07-io.html"><strong aria-hidden="true">7.</strong> IO</a></li><li class="chapter-item expanded "><a href="ch08-record-sizes.html"><strong aria-hidden="true">8.</strong> TLS Record Sizes</a></li><li class="chapter-item expanded "><a href="ch09-certificates.html"><strong aria-hidden="true">9.</strong> Certificates and Authentication</a></li><li class="chapter-item expanded "><a href="ch10-client-hello.html"><strong aria-hidden="true">10.</strong> Examining the Client Hello</a></li><li class="chapter-item expanded "><a href="ch11-resumption.html"><strong aria-hidden="true">11.</strong> Session Resumption</a></li><li class="chapter-item expanded "><a href="ch12-private-key-ops.html"><strong aria-hidden="true">12.</strong> Offloading Private Key Operations</a></li><li class="chapter-item expanded "><a href="ch13-preshared-keys.html"><strong aria-hidden="true">13.</strong> Pre-shared Keys</a></li><li class="chapter-item expanded "><a href="ch14-early-data.html"><strong aria-hidden="true">14.</strong> Early Data</a></li><li class="chapter-item expanded "><a href="ch15-post-quantum.html"><strong aria-hidden="true">15.</strong> Post Quantum Support</a></li></ol>
             </div>
             <div id="sidebar-resize-handle" class="sidebar-resize-handle">
                 <div class="sidebar-resize-indicator"></div>
@@ -177,15 +177,24 @@
 <p>s2n-tls uses pre-made security policies to help avoid common misconfiguration mistakes for TLS.</p>
 <p><code>s2n_config_set_cipher_preferences()</code> sets a security policy, which includes the cipher/kem/signature/ecc preferences and protocol version.</p>
 <h2 id="supported-tls-versions"><a class="header" href="#supported-tls-versions">Supported TLS Versions</a></h2>
-<p>Currently TLS 1.2 is our default version, but we recommend TLS 1.3 where possible. To use TLS 1.3 you need a security policy that supports TLS 1.3.
-<strong>Note:</strong> s2n-tls does not support SSL2.0 for sending and receiving encrypted data, but does accept SSL2.0 hello messages.</p>
+<p>Currently TLS 1.2 is our default version, but we recommend TLS 1.3 where possible. To use TLS 1.3 you need a security policy that supports TLS 1.3.</p>
+<h3 id="ssl-30-tls-10-and-tls-11"><a class="header" href="#ssl-30-tls-10-and-tls-11">SSL 3.0, TLS 1.0, and TLS 1.1</a></h3>
+<p>s2n-tls supports older versions, but their use is not recommended.</p>
+<p>Compatibility with older versions of TLS may also require support for older ciphersuites. Although it is possible to negotiate older versions of TLS with more modern options like SHA256, AES, ECDSA, and ECDHE, older clients and servers may only support older options like SHA1, 3DES, RSA certs, and either RSA or DHE key exchange. If a security policy allows older TLS versions but does not allow older ciphersuites, handshakes with older clients and servers may fail.</p>
+<h3 id="ssl-20"><a class="header" href="#ssl-20">SSL 2.0</a></h3>
+<p>s2n-tls will not negotiate SSL 2.0, but will accept SSLv2 ClientHellos advertising a higher protocol version like TLS1.2. See the <a href="https://datatracker.ietf.org/doc/html/rfc5246#appendix-E.2">"Compatibility with SSL 2.0"</a> section in the TLS 1.2 RFC.</p>
+<p>Compatibility with SSLv2 ClientHellos advertising TLS1.2 may require similar support for older ciphersuites as compatibility with older versions of TLS does. In particular, SSLv2 ClientHellos are likely to require support for SHA1 and either RSA or DHE key exchange. This is due to technical limitations of the SSLv2 ClientHello, which does not include TLS extensions.</p>
 <h3 id="chart-security-policy-version-to-protocol-version-and-ciphersuites"><a class="header" href="#chart-security-policy-version-to-protocol-version-and-ciphersuites">Chart: Security Policy Version To Protocol Version And Ciphersuites</a></h3>
 <p>The following chart maps the security policy version to protocol version and ciphersuites supported.</p>
 <div class="table-wrapper"><table><thead><tr><th>version</th><th>TLS1.0</th><th>TLS1.1</th><th>TLS1.2</th><th>TLS1.3</th><th>AES-CBC</th><th>AES-GCM</th><th>CHACHAPOLY</th><th>3DES</th><th>RC4</th><th>DHE</th><th>ECDHE</th><th>RSA kx</th></tr></thead><tbody>
+<tr><td>default</td><td></td><td></td><td>X</td><td></td><td>X</td><td>X</td><td></td><td></td><td></td><td></td><td>X</td><td></td></tr>
+<tr><td>default_fips</td><td></td><td></td><td>X</td><td></td><td>X</td><td>X</td><td></td><td></td><td></td><td></td><td>X</td><td></td></tr>
+<tr><td>default_tls13</td><td></td><td></td><td>X</td><td>X</td><td>X</td><td>X</td><td>X</td><td></td><td></td><td></td><td>X</td><td></td></tr>
+<tr><td>20240501</td><td></td><td></td><td>X</td><td></td><td>X</td><td>X</td><td></td><td></td><td></td><td></td><td>X</td><td></td></tr>
+<tr><td>20240502</td><td></td><td></td><td>X</td><td></td><td>X</td><td>X</td><td></td><td></td><td></td><td></td><td>X</td><td></td></tr>
+<tr><td>20240503</td><td></td><td></td><td>X</td><td>X</td><td>X</td><td>X</td><td></td><td></td><td></td><td></td><td>X</td><td></td></tr>
 <tr><td>20230317</td><td></td><td></td><td>X</td><td>X</td><td>X</td><td>X</td><td></td><td></td><td></td><td></td><td>X</td><td></td></tr>
-<tr><td>default</td><td>X</td><td>X</td><td>X</td><td></td><td>X</td><td>X</td><td>X</td><td></td><td></td><td></td><td>X</td><td>X</td></tr>
-<tr><td>default_tls13</td><td>X</td><td>X</td><td>X</td><td>X</td><td>X</td><td>X</td><td>X</td><td></td><td></td><td></td><td>X</td><td>X</td></tr>
-<tr><td>default_fips</td><td></td><td></td><td>X</td><td></td><td>X</td><td>X</td><td></td><td></td><td></td><td>X</td><td>X</td><td></td></tr>
+<tr><td>20240331</td><td></td><td></td><td>X</td><td></td><td>X</td><td>X</td><td></td><td></td><td></td><td></td><td>X</td><td></td></tr>
 <tr><td>20190214</td><td>X</td><td>X</td><td>X</td><td></td><td>X</td><td>X</td><td></td><td>X</td><td></td><td>X</td><td>X</td><td>X</td></tr>
 <tr><td>20170718</td><td>X</td><td>X</td><td>X</td><td></td><td>X</td><td>X</td><td></td><td></td><td></td><td></td><td>X</td><td>X</td></tr>
 <tr><td>20170405</td><td>X</td><td>X</td><td>X</td><td></td><td>X</td><td>X</td><td></td><td>X</td><td></td><td></td><td>X</td><td>X</td></tr>
@@ -207,27 +216,36 @@
 <tr><td>rfc9151</td><td></td><td></td><td>X</td><td>X</td><td></td><td>X</td><td></td><td></td><td></td><td>X</td><td>X</td><td>X</td></tr>
 </tbody></table>
 </div>
-<p>The &quot;default&quot;, &quot;default_tls13&quot;, and &quot;default_fips&quot; versions are special in that they will be updated with future s2n-tls changes and ciphersuites and protocol versions may be added and removed, or their internal order of preference might change. Numbered versions are fixed and will never change.
-In general, customers prefer to use numbered versions for production use cases to prevent impact from library updates.</p>
-<p>&quot;20230317&quot; is a FIPS compliant policy. It offers more limited but more secure options than &quot;default&quot;. It only supports TLS1.2 and TLS1.3. Consider this policy if you plan to enable FIPS mode or don't need or want to support less secure legacy options like TLS1.1 or SHA1.</p>
-<p>&quot;20160411&quot; follows the same general preference order as &quot;default&quot;. The main difference is it has a CBC cipher suite at the top. This is to accommodate certain Java clients that have poor GCM implementations. Users of s2n-tls who have found GCM to be hurting performance for their clients should consider this version.</p>
-<p>&quot;rfc9151&quot; is derived from <a href="https://datatracker.ietf.org/doc/html/rfc9151">Commercial National Security Algorithm (CNSA) Suite Profile for TLS and DTLS 1.2 and 1.3</a>. This policy restricts the algorithms allowed for signatures on certificates in the certificate chain to RSA or ECDSA with sha384, which may require you to update your certificates.</p>
+<p>The "default", "default_tls13", and "default_fips" versions are special in that they will be updated with future s2n-tls changes to keep up-to-date with current security best practices. Ciphersuites, protocol versions, and other options may be added or removed, or their internal order of preference might change. <strong>Warning</strong>: this means that the default policies may change as a result of library updates, which could break peers that rely on legacy options.</p>
+<p>In contrast, numbered or dated versions are fixed and will never change. The numbered equivalents of the default policies are currently:</p>
+<ul>
+<li>"default": "20240501"</li>
+<li>"default_fips": "20240502"</li>
+<li>"default_tls13": "20240503"
+For previous defaults, see the "Default Policy History" section below.</li>
+</ul>
+<p>"default_fips" does not currently support TLS1.3. If you need a policy that supports both FIPS and TLS1.3, choose "20230317". We plan to add TLS1.3 support to both "default" and "default_fips" in the future.</p>
+<p>"rfc9151" is derived from <a href="https://datatracker.ietf.org/doc/html/rfc9151">Commercial National Security Algorithm (CNSA) Suite Profile for TLS and DTLS 1.2 and 1.3</a>. This policy restricts the algorithms allowed for signatures on certificates in the certificate chain to RSA or ECDSA with sha384, which may require you to update your certificates.
+Like the default policies, this policy may also change if the source RFC definition changes.</p>
 <p>s2n-tls does not expose an API to control the order of preference for each ciphersuite or protocol version. s2n-tls follows the following order:</p>
-<p><em>NOTE</em>: All ChaCha20-Poly1305 cipher suites will not be available if s2n-tls is not built with an Openssl 1.1.1 libcrypto. The underlying encrypt/decrypt functions are not available in older versions.</p>
 <ol>
 <li>Always prefer the highest protocol version supported</li>
 <li>Always use forward secrecy where possible. Prefer ECDHE over DHE.</li>
 <li>Prefer encryption ciphers in the following order: AES128, AES256, ChaCha20, 3DES, RC4.</li>
 <li>Prefer record authentication modes in the following order: GCM, Poly1305, SHA256, SHA1, MD5.</li>
 </ol>
+<p><em>NOTE</em>: ChaCha20-Poly1305 cipher suites will not be available if s2n-tls is built with an older libcrypto like openssl-1.0.2. The underlying encrypt/decrypt functions are not available in older versions.</p>
 <h4 id="chacha20-boosting"><a class="header" href="#chacha20-boosting">ChaCha20 Boosting</a></h4>
-<p>s2n-tls usually prefers AES over ChaCha20. However, some clients-- particularly mobile or IOT devices-- do not support AES hardware acceleration, making AES less efficient and performant than ChaCha20. In this case, clients will indicate their preference for ChaCha20 by listing it first during cipher suite negotiation. Usually s2n-tls servers ignore client preferences, but s2n-tls offers &quot;ChaCha20 boosted&quot; security policies that will choose ChaCha20 over AES if the client indicates a preference for ChaCha20. This is available in the &quot;CloudFront-TLS-1-2-2021-ChaCha20-Boosted&quot; policy, which is identical to the &quot;CloudFront-TLS-1-2-2021&quot; policy listed above but with ChaCha20 Boosting enabled.</p>
+<p>s2n-tls usually prefers AES over ChaCha20. However, some clients-- particularly mobile or IOT devices-- do not support AES hardware acceleration, making AES less efficient and performant than ChaCha20. In this case, clients will indicate their preference for ChaCha20 by listing it first during cipher suite negotiation. Usually s2n-tls servers ignore client preferences, but s2n-tls offers "ChaCha20 boosted" security policies that will choose ChaCha20 over AES if the client indicates a preference for ChaCha20. This is available in the "CloudFront-TLS-1-2-2021-ChaCha20-Boosted" policy, which is identical to the "CloudFront-TLS-1-2-2021" policy listed above but with ChaCha20 Boosting enabled.</p>
 <h3 id="chart-security-policy-version-to-supported-signature-schemes"><a class="header" href="#chart-security-policy-version-to-supported-signature-schemes">Chart: Security Policy Version To Supported Signature Schemes</a></h3>
 <div class="table-wrapper"><table><thead><tr><th>version</th><th>RSA PKCS1</th><th>ECDSA</th><th>SHA-1 Legacy</th><th>RSA PSS</th></tr></thead><tbody>
+<tr><td>default</td><td>X</td><td>X</td><td></td><td>X</td></tr>
+<tr><td>default_fips</td><td>X</td><td>X</td><td></td><td>X</td></tr>
+<tr><td>default_tls13</td><td>X</td><td>X</td><td></td><td>X</td></tr>
+<tr><td>20240501</td><td>X</td><td>X</td><td></td><td>X</td></tr>
+<tr><td>20240502</td><td>X</td><td>X</td><td></td><td>X</td></tr>
+<tr><td>20240503</td><td>X</td><td>X</td><td></td><td>X</td></tr>
 <tr><td>20230317</td><td>X</td><td>X</td><td></td><td>X</td></tr>
-<tr><td>default</td><td>X</td><td></td><td>X</td><td></td></tr>
-<tr><td>default_tls13</td><td>X</td><td>X</td><td>X</td><td>X</td></tr>
-<tr><td>default_fips</td><td>X</td><td>X</td><td></td><td></td></tr>
 <tr><td>20190214</td><td>X</td><td>X</td><td>X</td><td></td></tr>
 <tr><td>20170718</td><td>X</td><td></td><td>X</td><td></td></tr>
 <tr><td>20170405</td><td>X</td><td></td><td>X</td><td></td></tr>
@@ -249,13 +267,17 @@ In general, customers prefer to use numbered versions for production use cases t
 <tr><td>rfc9151</td><td>X</td><td>X</td><td></td><td>X</td></tr>
 </tbody></table>
 </div>
-<p>Note that legacy SHA-1 algorithms are not supported in TLS1.3. Legacy SHA-1 algorithms will be supported only if TLS1.2 has been negotiated and the security policy allows them.</p>
+<p><em>NOTE</em>: Legacy SHA-1 algorithms are not supported in TLS1.3. Legacy SHA-1 algorithms will be supported only if TLS1.2 has been negotiated and the security policy allows them.</p>
+<p><em>NOTE</em>: RSA-PSS certificates will not be available if s2n-tls is built with an older libcrypto like openssl-1.0.2. RSA certificate signatures with PSS padding (RSA-PSS-RSAE) will still be available, but RSA-PSS certificate signatures with PSS padding (RSA-PSS-PSS) will not be available.</p>
 <h3 id="chart-security-policy-version-to-supported-curvesgroups"><a class="header" href="#chart-security-policy-version-to-supported-curvesgroups">Chart: Security policy version to supported curves/groups</a></h3>
 <div class="table-wrapper"><table><thead><tr><th>version</th><th>secp256r1</th><th>secp384r1</th><th>x25519</th></tr></thead><tbody>
-<tr><td>20230317</td><td>X</td><td>X</td><td></td></tr>
-<tr><td>default</td><td>X</td><td>X</td><td></td></tr>
-<tr><td>default_tls13</td><td>X</td><td>X</td><td>X</td></tr>
+<tr><td>default</td><td>X</td><td>X</td><td>X</td></tr>
 <tr><td>default_fips</td><td>X</td><td>X</td><td></td></tr>
+<tr><td>default_tls13</td><td>X</td><td>X</td><td>X</td></tr>
+<tr><td>20240501</td><td>X</td><td>X</td><td>X</td></tr>
+<tr><td>20240502</td><td>X</td><td>X</td><td></td></tr>
+<tr><td>20240503</td><td>X</td><td>X</td><td>X</td></tr>
+<tr><td>20230317</td><td>X</td><td>X</td><td></td></tr>
 <tr><td>20190214</td><td>X</td><td>X</td><td></td></tr>
 <tr><td>20170718</td><td>X</td><td>X</td><td></td></tr>
 <tr><td>20170405</td><td>X</td><td>X</td><td></td></tr>
@@ -275,6 +297,12 @@ In general, customers prefer to use numbered versions for production use cases t
 <tr><td>20190802</td><td>X</td><td>X</td><td></td></tr>
 <tr><td>20200207</td><td>X</td><td>X</td><td>X</td></tr>
 <tr><td>rfc9151</td><td></td><td>X</td><td></td></tr>
+</tbody></table>
+</div>
+<h3 id="default-policy-history"><a class="header" href="#default-policy-history">Default Policy History</a></h3>
+<div class="table-wrapper"><table><thead><tr><th>Version</th><th>"default"</th><th>"default_fips"</th><th>"default_tls13"</th></tr></thead><tbody>
+<tr><td>v1.4.16</td><td>20240501</td><td>20240502</td><td>20240503</td></tr>
+<tr><td>Older</td><td>20170210</td><td>20240416</td><td>20240417</td></tr>
 </tbody></table>
 </div>
                     </main>
